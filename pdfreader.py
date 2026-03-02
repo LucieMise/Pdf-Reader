@@ -5,9 +5,16 @@ import sys
 import fitz  # PyMuPDF
 
 
+def _extract_text_from_doc(doc: fitz.Document) -> str:
+    text_chunks: list[str] = []
+    for page in doc:
+        text_chunks.append(page.get_text())
+    return "\n".join(text_chunks).strip()
+
+
 def read_pdf_text(pdf_path: str | Path) -> str:
     """
-    Read all text from a PDF file using PyMuPDF.
+    Read all text from a PDF file path using PyMuPDF.
     """
     path = Path(pdf_path)
     if not path.exists():
@@ -15,11 +22,16 @@ def read_pdf_text(pdf_path: str | Path) -> str:
     if path.suffix.lower() != ".pdf":
         raise ValueError(f"Expected a .pdf file, got: {path}")
 
-    text_chunks: list[str] = []
     with fitz.open(path) as doc:
-        for page in doc:
-            text_chunks.append(page.get_text())
-    return "\n".join(text_chunks).strip()
+        return _extract_text_from_doc(doc)
+
+
+def read_pdf_bytes(pdf_bytes: bytes) -> str:
+    """
+    Read all text from PDF bytes (useful for uploaded files).
+    """
+    with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
+        return _extract_text_from_doc(doc)
 
 
 def main() -> int:
